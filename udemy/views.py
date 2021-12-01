@@ -12,6 +12,8 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication , SessionAuthentication , BasicAuthentication
 
+from django.core.files.storage import FileSystemStorage
+
 from .serializers import ( 
         UserSerializer, 
         RegisterSerializer , 
@@ -153,15 +155,28 @@ class Upload(GenericAPIView):
     @csrf_exempt
     def post(self, request):
         data = request.data
+        
+        title  = data.get('title') , 
+        video = request.FILES['video'] , 
+        description = data.get('description') , 
+        category =  data.get('category') , 
+        Teacher_name = data.get('Teacher_name') , 
+        price = data.get('price')
+        
+        fss = FileSystemStorage()
+        fss.save(video.name , video)
+        
         upload = {
-        'title' : data.get('title') , 
-        'video' : data.get('video') , 
-        'description' : request.get('description') , 
-        'category' : request.get('category') , 
-        'author_name' : request.get('author') , 
-        'price' : request.get('price')
+            'title' : title ,
+            'video' : video ,
+            'description' : description , 
+            'category' : category ,
+            'Teacher_name' : Teacher_name ,
+            'price' : price
         }
-        serializer = self.get_serializer(upload)
+        
+        
+        serializer = self.get_serializer(data = upload)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data , status = status.HTTP_200_OK)
