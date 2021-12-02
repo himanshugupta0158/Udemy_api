@@ -149,6 +149,7 @@ class Dashboard(GenericAPIView):
     def get(self, request):
         course = self.get_queryset()
         serializer = self.get_serializer(course , many = True)
+        print(serializer)
         return Response(serializer.data , status = status.HTTP_200_OK)
 
 class Upload(GenericAPIView):
@@ -205,8 +206,11 @@ class Category(GenericAPIView):
             'Kotlin' : kotlin , 
             'other' : other
         }
+        print(data)
+        print(type(data))
         
-        serializer = CourseSerializer(data = data , many = True)
+        serializer = CourseSerializer(data = data )
+        print(serializer)
         if serializer.is_valid():
             return Response(serializer.data , status = status.HTTP_200_OK)
         return Response(serializer.errors , status = status.HTTP_400_BAD_REQUEST)

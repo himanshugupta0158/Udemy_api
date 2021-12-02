@@ -7,9 +7,17 @@ from django.contrib.auth.models import User
 # adding new course
 
 class Courses(models.Model):
+    
+    class lang(models.TextChoices):
+        PYTHON = 'Python'
+        JAVA = 'Java'
+        KOTLIN = 'Kotlin'
+        OTHER = 'Other'
+      
+    
     title = models.CharField(max_length=150)
     description = models.TextField()
-    category = models.CharField(max_length = 150)
+    category = models.CharField(max_length = 150 , choices = lang.choices , default = lang.PYTHON)
     created_on = models.DateTimeField(auto_now_add=True)
     Teacher_name = models.CharField(max_length=50)
     price = models.DecimalField(max_digits=5, decimal_places=2)
