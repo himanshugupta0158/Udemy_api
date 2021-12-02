@@ -13,9 +13,12 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(
             max_length=100,min_length=6,write_only=True)
+    profession = serializers.CharField(
+        max_length=100,min_length=3,write_only=True
+    )
     class Meta:
         model = User
-        fields = ['username','first_name','last_name','email','password','confirm_password']
+        fields = ['username','first_name','last_name','email' , 'profession' ,'password','confirm_password']
     
     def create(self , validated_data):
         if validated_data['password']!=validated_data['confirm_password']:
@@ -46,4 +49,4 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Courses
-        fields = ['title' , 'category' , 'description' , 'Teacher_name' , 'created_on' , 'price' , 'video']
+        fields = '__all__'

@@ -21,7 +21,7 @@ from .serializers import (
         ChangePasswordSerializer ,
         CourseSerializer
                           )
-from .models import Courses
+from .models import Courses , UserProfession
 
 # Create your views here.
 
@@ -36,6 +36,7 @@ class RegisterAPI(GenericAPIView):
         serializer = self.get_serializer(data = request.data)
         if serializer.is_valid():
             user = serializer.save()
+            UserProfession(username = request.data['username'], profession = request.data['profession']).save()
             login(request , user)
             return Response({"user": UserSerializer(user, context=self.get_serializer_context()).data}, status = status.HTTP_201_CREATED)
         return Response(serializer.errors , status = status.HTTP_400_BAD_REQUEST)
@@ -153,35 +154,27 @@ class Upload(GenericAPIView):
     queryset = Courses
     
     @csrf_exempt
-    def post(self, request):
-        data = request.data
-        
-        title  = data.get('title') , 
-        video = request.FILES['video'] , 
-        description = data.get('description') , 
-        category =  data.get('category') , 
-        Teacher_name = data.get('Teacher_name') , 
-        price = data.get('price')
-        
-        fss = FileSystemStorage()
-        fss.save(video.name , video)
-        
-        upload = {
-            'title' : title ,
-            'video' : video ,
-            'description' : description , 
-            'category' : category ,
-            'Teacher_name' : Teacher_name ,
-            'price' : price
-        }
-        
-        
-        serializer = self.get_serializer(data = upload)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data , status = status.HTTP_200_OK)
-        return Response({"Upload failed" : "video does not uploaded."} , status = status.HTTP_400_BAD_REQUEST)
-            
+    def get(self, request):
+        user = UserProfession.objects.get(username = request.user.username)
+        if user.profession == 'Teacher' :
+            return Response({"Upload allowed" : "Teacher are allows to upload video(s)."} , status = status.HTTP_400_BAD_REQUEST)
+        else :
+            return Response({"Upload not allowed" : "Students are not allows to upload video(s)."} , status = status.HTTP_400_BAD_REQUEST)
     
+    
+    @csrf_exempt
+    def post(self, request):
+        user = UserProfession.objects.get(username = request.user.username)
+        if user.profession == 'Teacher' :
+            serializer = self.get_serializer(data = request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data , status = status.HTTP_200_OK)
+            return Response({"Upload failed" : "video does not uploaded."} , status = status.HTTP_400_BAD_REQUEST)
+        else :
+            return Response({"Upload failed" : "Students are not allows to upload video(s)."} , status = status.HTTP_400_BAD_REQUEST)
+
+class Cart(GenericAPIView):
+    pass
         
 
