@@ -28,4 +28,9 @@ class UserProfession(models.Model):
     
     def __str__(self):
         return f"username : {self.username} , profession : {self.profession}"
+
+
+class Cart(models.Model):
+    course_title = models.CharField(max_length=150)
+    access_name = models.CharField(max_length=50)
     

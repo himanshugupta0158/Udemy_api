@@ -5,6 +5,8 @@ from django.contrib.auth import logout
 from django.contrib.auth.hashers import make_password , check_password
 
 from django.views.decorators.csrf import csrf_exempt
+
+from rest_framework import mixins
 from rest_framework import status
 from rest_framework.response import Response
 # from rest_framework.decorators import api_view
@@ -19,9 +21,10 @@ from .serializers import (
         RegisterSerializer , 
         LoginSerializer , 
         ChangePasswordSerializer ,
-        CourseSerializer
+        CourseSerializer,
+        CartSerializer
                           )
-from .models import Courses , UserProfession
+from .models import Courses , UserProfession , Cart
 
 # Create your views here.
 
@@ -140,11 +143,11 @@ class ChangePasswordAPI(GenericAPIView):
 class Dashboard(GenericAPIView):
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
-    queryset = Courses
+    queryset = Courses.objects.all()
     
     @csrf_exempt
     def get(self, request):
-        course = Courses.objects.all()
+        course = self.get_queryset()
         serializer = self.get_serializer(course , many = True)
         return Response(serializer.data , status = status.HTTP_200_OK)
 
@@ -174,7 +177,109 @@ class Upload(GenericAPIView):
         else :
             return Response({"Upload failed" : "Students are not allows to upload video(s)."} , status = status.HTTP_400_BAD_REQUEST)
 
-class Cart(GenericAPIView):
-    pass
+
+class Category(GenericAPIView):
+    serializer_class = CourseSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Courses
+    
+    @csrf_exempt
+    def get(self , request):
+        java = set()
+        python = set()
+        kotlin = set()
+        other = set()
+        
+        for i in Courses.objects.all():
+            if i.category == 'Python' :
+                python.add(i)
+            elif i.category == 'Java' :
+                java.add(i)
+            elif i.category == 'Kotlin':
+                kotlin.add(i)
+            else:
+                other.add(i)
+        data = {
+            'Python' : python ,
+            'Java' : java ,
+            'Kotlin' : kotlin , 
+            'other' : other
+        }
+        
+        serializer = CourseSerializer(data = data , many = True)
+        if serializer.is_valid():
+            return Response(serializer.data , status = status.HTTP_200_OK)
+        return Response(serializer.errors , status = status.HTTP_400_BAD_REQUEST)
+    
+    
+
+
+class AddToCart(GenericAPIView):
+    serializer_class = CartSerializer
+    permission_classes = [IsAuthenticated]
+    
+    @csrf_exempt
+    def get(self, request ,id):
+        course = Courses.objects.get(id = id)
+        item = {
+            'course_title' : course.title,
+            'access_name' : request.user.username
+        }
+        serializer = self.get_serializer(data= item)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data , status = status.HTTP_200_OK)
+        return Response({"Process failed" : "Course does not added to cart"} , status = status.HTTP_400_BAD_REQUEST)
+    
+    
+class CartItem(GenericAPIView ,mixins.ListModelMixin , mixins.RetrieveModelMixin , mixins.DestroyModelMixin):
+    serializer_class = CourseSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Cart
+    
+    @csrf_exempt
+    def get(self, request):
+        items = Cart.objects.filter(access_name = request.user.username)
+        course = dict()
+        print(course)
+        for item in items :
+            course['item'] = Courses.objects.get(title = item.course_title)
+        print(course)
+        serializer = CourseSerializer(data = course)
+        print(serializer)
+        if serializer.is_valid():
+            print('valid')
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        return Response(serializer.errors , status = status.HTTP_400_BAD_REQUEST)
+            
+            
+            
+class DeleteCartItem(GenericAPIView):
+    serializer_class = CartSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Cart.objects.all()
+    lookup_field = 'id'
+        
+    @csrf_exempt
+    def get(self, request , id = None):
+        try:
+            if request.user.username == Cart.objects.get(id = id).access_name :
+                return self.retrieve(request)
+            else :
+                return Response({'access failed' : 'unauthorized access failed.'} , status = status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({'not found' : 'Item does not exist'} , status = status.HTTP_400_BAD_REQUEST)
+
+    @csrf_exempt
+    def delete(self , request , id):
+        try:
+            if request.user.username == Cart.objects.get(id = id).access_name :
+                return self.destroy(request , id)
+            return Response({'access failed' : 'unauthorized access failed.'} , status = status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({'not found' : 'Item does not exist'} , status = status.HTTP_400_BAD_REQUEST)
+
+    
+    
         
 

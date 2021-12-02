@@ -11,4 +11,9 @@ urlpatterns = [
     path('changepassword/', views.ChangePasswordAPI.as_view(), name='changepassword'),
     path("dashboard/", views.Dashboard.as_view(), name="dashboard"),
     path("upload/", views.Upload.as_view(), name="upload"),
+    path("addtocart/<int:id>", views.AddToCart.as_view(), name="addtocart"),
+    path("cart/", views.CartItem.as_view(), name="cart"),
+    path("cart/<int:id>", views.DeleteCartItem.as_view()),
+    path("category/", views.Category.as_view(), name="category"),
+    
 ]

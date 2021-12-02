@@ -1,7 +1,7 @@
 from rest_framework import serializers
 # from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
-from .models import Courses
+from .models import Courses ,Cart
 
 # User Serializer
 class UserSerializer(serializers.ModelSerializer):
@@ -49,4 +49,9 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Courses
+        fields = '__all__'
+        
+class CartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cart
         fields = '__all__'
